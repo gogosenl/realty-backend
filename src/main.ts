@@ -3,9 +3,11 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
-  const app = NestFactory.create(AppModule);
-  (await app).useGlobalPipes(new ValidationPipe({ whitelist: true }));
-  (await app).enableCors();
-  (await app).listen(process.env.PORT ?? 3000);
+  const app = await NestFactory.create(AppModule);
+  app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
+  app.enableCors({
+    origin: '*',
+  });
+  await app.listen(process.env.PORT ?? 3001);
 }
 bootstrap();
