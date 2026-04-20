@@ -79,4 +79,62 @@ export class TransactionsService {
       sellingAgentAmount: isSameAgent ? 0 : agentPool * 0.5,
     };
   }
+  async getAgentEarnings(): Promise<any[]> {
+  const completed = await this.transactionModel
+    .find({ stage: TransactionStage.COMPLETED })
+    .populate('listingAgent', 'name email')
+    .populate('sellingAgent', 'name email')
+    .exec();
+
+  const earningsMap = new Map<string, { agent: any; total: number }>();
+
+  for (const txn of completed) {
+    const breakdown = txn.commissionBreakdown;
+    if (!breakdown) continue;
+
+    const listingId = (txn.listingAgent as any)._id.toString();
+    const sellingId = (txn.sellingAgent as any)._id.toString();
+
+    if (!earningsMap.has(listingId)) {
+      earningsMap.set(listingId, { agent: txn.listingAgent, total: 0 });
+    }
+    earningsMap.get(listingId)!.total += breakdown.listingAgentAmount;
+
+    if (listingId !== sellingId) {
+      if (!earningsMap.has(sellingId)) {
+        earningsMap.set(sellingId, { agent: txn.sellingAgent, total: 0 });
+      }
+      earningsMap.get(sellingId)!.total += breakdown.sellingAgentAmount;
+    }
+  }
+
+  return Array.from(earningsMap.values());
+}
+
+async getFinancialSummary(): Promise<any> {
+  const completed = await this.transactionModel
+    .find({ stage: TransactionStage.COMPLETED })
+    .exec();
+
+  const totalRevenue = completed.reduce(
+    (sum, txn) => sum + (txn.commissionBreakdown?.totalServiceFee ?? 0), 0
+  );
+  const agencyRevenue = completed.reduce(
+    (sum, txn) => sum + (txn.commissionBreakdown?.agencyAmount ?? 0), 0
+  );
+  const agentRevenue = completed.reduce(
+    (sum, txn) =>
+      sum +
+      (txn.commissionBreakdown?.listingAgentAmount ?? 0) +
+      (txn.commissionBreakdown?.sellingAgentAmount ?? 0),
+    0,
+  );
+
+  return {
+    completedCount: completed.length,
+    totalRevenue,
+    agencyRevenue,
+    agentRevenue,
+  };
+}
 }

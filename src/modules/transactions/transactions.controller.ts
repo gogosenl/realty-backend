@@ -25,4 +25,14 @@ export class TransactionsController {
   updateStage(@Param('id') id: string, @Body() dto: UpdateStageDto) {
     return this.transactionsService.updateStage(id, dto);
   }
+
+  @Get('summary/financial')
+  getFinancialSummary() {
+    return this.transactionsService.getFinancialSummary();
+  }
+
+  @Get('summary/agent-earnings')
+  getAgentEarnings() {
+    return this.transactionsService.getAgentEarnings();
+  }
 }
