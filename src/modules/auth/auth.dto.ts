@@ -3,17 +3,17 @@ import { UserRole } from './user.schema';
 
 export class RegisterDto {
   @IsNotEmpty()
-  @IsString()
-  name: string;
+    @IsString()
+    name!: string;
 
   @IsNotEmpty()
-  @IsEmail()
-  email: string;
+    @IsEmail()
+    email!: string;
 
   @IsNotEmpty()
-  @IsString()
-  @MinLength(6)
-  password: string;
+    @IsString()
+    @MinLength(6)
+    password!: string;
 
   @IsOptional()
   @IsEnum(UserRole)
@@ -22,10 +22,10 @@ export class RegisterDto {
 
 export class LoginDto {
   @IsNotEmpty()
-  @IsEmail()
-  email: string;
+    @IsEmail()
+    email!: string;
 
   @IsNotEmpty()
-  @IsString()
-  password: string;
+    @IsString()
+    password!: string;
 }
