@@ -6,6 +6,16 @@ import { CreateTransactionDto, UpdateStageDto } from './transaction.dto';
 export class TransactionsController {
   constructor(private readonly transactionsService: TransactionsService) {}
 
+  @Get('summary/financial')
+  getFinancialSummary() {
+    return this.transactionsService.getFinancialSummary();
+  }
+
+  @Get('summary/agent-earnings')
+  getAgentEarnings() {
+    return this.transactionsService.getAgentEarnings();
+  }
+
   @Post()
   create(@Body() dto: CreateTransactionDto) {
     return this.transactionsService.create(dto);
@@ -24,15 +34,5 @@ export class TransactionsController {
   @Patch(':id/stage')
   updateStage(@Param('id') id: string, @Body() dto: UpdateStageDto) {
     return this.transactionsService.updateStage(id, dto);
-  }
-
-  @Get('summary/financial')
-  getFinancialSummary() {
-    return this.transactionsService.getFinancialSummary();
-  }
-
-  @Get('summary/agent-earnings')
-  getAgentEarnings() {
-    return this.transactionsService.getAgentEarnings();
   }
 }
