@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AgentsModule } from './modules/agents/agents.module';
 import { TransactionsModule } from './modules/transactions/transactions.module';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { TransactionsModule } from './modules/transactions/transactions.module';
       }),
       inject: [ConfigService],
     }),
+    AuthModule,
     AgentsModule,
     TransactionsModule,
   ],
