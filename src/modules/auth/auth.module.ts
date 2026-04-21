@@ -3,13 +3,17 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { User, UserSchema } from './user.schema';
+import { Invite, InviteSchema } from './invite.schema';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './jwt.strategy';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    MongooseModule.forFeature([
+      { name: User.name, schema: UserSchema },
+      { name: Invite.name, schema: InviteSchema },
+    ]),
     PassportModule,
     JwtModule.register({
       secret: 'realty_super_secret_key_2026',

@@ -1,7 +1,9 @@
-import { Body, Controller, Get, Post, Request, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Request, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
-import { LoginDto, RegisterDto } from './auth.dto';
+import { LoginDto, RegisterDto, InviteDto } from './auth.dto';
+import { RolesGuard } from '../../common/roles.guard';
+import { Roles } from '../../common/roles.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -21,5 +23,26 @@ export class AuthController {
   @Get('me')
   getMe(@Request() req: any) {
     return this.authService.getMe(req.user.id);
+  }
+
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('admin')
+  @Post('invite')
+  inviteAgent(@Body() dto: InviteDto) {
+    return this.authService.inviteAgent(dto);
+  }
+
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('admin')
+  @Get('invites')
+  getInvites() {
+    return this.authService.getInvites();
+  }
+
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('admin')
+  @Delete('invites/:id')
+  deleteInvite(@Param('id') id: string) {
+    return this.authService.deleteInvite(id);
   }
 }

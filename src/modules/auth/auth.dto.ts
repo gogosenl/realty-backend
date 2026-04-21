@@ -29,3 +29,9 @@ export class LoginDto {
     @IsString()
     password!: string;
 }
+
+export class InviteDto {
+  @IsNotEmpty()
+  @IsEmail()
+  email!: string;
+}
