@@ -34,3 +34,31 @@ export class UpdateStageDto {
     @IsEnum(TransactionStage)
     stage!: TransactionStage;
 }
+
+export class UpdateTransactionDto {
+  @IsOptional()
+  @IsString()
+  propertyAddress?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  salePrice?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  totalServiceFee?: number;
+
+  @IsOptional()
+  @IsMongoId()
+  listingAgent?: string;
+
+  @IsOptional()
+  @IsMongoId()
+  sellingAgent?: string;
+
+  @IsOptional()
+  @IsString()
+  notes?: string;
+}

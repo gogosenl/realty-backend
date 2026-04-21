@@ -2,8 +2,7 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Transaction, TransactionDocument, TransactionStage } from './transaction.schema';
-import { CreateTransactionDto, UpdateStageDto } from './transaction.dto';
-
+import { CreateTransactionDto, UpdateStageDto, UpdateTransactionDto } from './transaction.dto';
 const STAGE_ORDER = [
   TransactionStage.AGREEMENT,
   TransactionStage.EARNEST_MONEY,
@@ -13,6 +12,7 @@ const STAGE_ORDER = [
 
 @Injectable()
 export class TransactionsService {
+  [x: string]: any;
   constructor(
     @InjectModel(Transaction.name)
     private transactionModel: Model<TransactionDocument>,
@@ -110,7 +110,24 @@ export class TransactionsService {
 
   return Array.from(earningsMap.values());
 }
+async update(id: string, dto: UpdateTransactionDto): Promise<TransactionDocument> {
+  const transaction = await this.transactionModel
+    .findById(id)
+    .exec();
+    
+  if (!transaction) throw new NotFoundException(`Transaction ${id} not found`);
 
+  if (transaction.stage === TransactionStage.COMPLETED) {
+    throw new BadRequestException('Tamamlanmış işlem düzenlenemez');
+  }
+
+  if (dto.propertyAddress) transaction.propertyAddress = dto.propertyAddress;
+  if (dto.salePrice) transaction.salePrice = dto.salePrice;
+  if (dto.totalServiceFee) transaction.totalServiceFee = dto.totalServiceFee;
+  if (dto.notes !== undefined) transaction.notes = dto.notes;
+
+  return transaction.save();
+}
 async getFinancialSummary(): Promise<any> {
   const completed = await this.transactionModel
     .find({ stage: TransactionStage.COMPLETED })

@@ -1,7 +1,7 @@
-import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { TransactionsService } from './transactions.service';
-import { CreateTransactionDto, UpdateStageDto } from './transaction.dto';
+import { CreateTransactionDto, UpdateStageDto, UpdateTransactionDto } from './transaction.dto';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('transactions')
@@ -37,4 +37,14 @@ export class TransactionsController {
   updateStage(@Param('id') id: string, @Body() dto: UpdateStageDto) {
     return this.transactionsService.updateStage(id, dto);
   }
+
+  @Patch(':id')
+update(@Param('id') id: string, @Body() dto: UpdateTransactionDto) {
+  return this.transactionsService.update(id, dto);
+}
+
+@Delete(':id')
+remove(@Param('id') id: string) {
+  return this.transactionsService.remove(id);
+}
 }
