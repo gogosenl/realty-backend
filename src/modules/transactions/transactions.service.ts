@@ -23,13 +23,24 @@ export class TransactionsService {
     return transaction.save();
   }
 
-  async findAll(): Promise<TransactionDocument[]> {
-    return this.transactionModel
-      .find()
-      .populate('listingAgent', 'name email')
-      .populate('sellingAgent', 'name email')
-      .exec();
+ async findAll(userId?: string, userRole?: string): Promise<TransactionDocument[]> {
+  const query = this.transactionModel
+    .find()
+    .populate('listingAgent', 'name email')
+    .populate('sellingAgent', 'name email');
+
+  const results = await query.exec();
+
+  if (userRole === 'agent' && userId) {
+    return results.filter((txn) => {
+      const listing = (txn.listingAgent as any)?._id?.toString();
+      const selling = (txn.sellingAgent as any)?._id?.toString();
+      return listing === userId || selling === userId;
+    });
   }
+
+  return results;
+}
 
   async findOne(id: string): Promise<TransactionDocument> {
     const transaction = await this.transactionModel

@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Request, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { TransactionsService } from './transactions.service';
 import { CreateTransactionDto, UpdateStageDto, UpdateTransactionDto } from './transaction.dto';
@@ -23,10 +23,10 @@ export class TransactionsController {
     return this.transactionsService.create(dto);
   }
 
-  @Get()
-  findAll() {
-    return this.transactionsService.findAll();
-  }
+ @Get()
+findAll(@Request() req: any) {
+  return this.transactionsService.findAll(req.user.id, req.user.role);
+}
 
   @Get(':id')
   findOne(@Param('id') id: string) {

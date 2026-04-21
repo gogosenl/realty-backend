@@ -69,6 +69,23 @@ export class AuthService {
     if (!invite) throw new NotFoundException('Davet bulunamadı');
     return { message: 'Davet silindi' };
   }
+  async getUsers() {
+  return this.userModel.find().select('-password').sort({ createdAt: -1 }).exec();
+}
+
+async deleteUser(id: string) {
+  const user = await this.userModel.findByIdAndDelete(id);
+  if (!user) throw new NotFoundException('Kullanıcı bulunamadı');
+  return { message: 'Kullanıcı silindi' };
+}
+
+async updateUserRole(id: string, role: UserRole) {
+  const user = await this.userModel.findById(id);
+  if (!user) throw new NotFoundException('Kullanıcı bulunamadı');
+  user.role = role;
+  await user.save();
+  return { message: 'Rol güncellendi', user: { id: user._id, name: user.name, email: user.email, role: user.role } };
+}
 
   private signToken(user: UserDocument) {
     const payload = { sub: user._id, email: user.email, role: user.role };

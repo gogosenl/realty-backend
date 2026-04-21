@@ -1,7 +1,7 @@
-import { Body, Controller, Delete, Get, Param, Post, Request, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Request, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
-import { LoginDto, RegisterDto, InviteDto } from './auth.dto';
+import { LoginDto, RegisterDto, InviteDto, UpdateRoleDto } from './auth.dto';
 import { RolesGuard } from '../../common/roles.guard';
 import { Roles } from '../../common/roles.decorator';
 
@@ -44,5 +44,26 @@ export class AuthController {
   @Delete('invites/:id')
   deleteInvite(@Param('id') id: string) {
     return this.authService.deleteInvite(id);
+  }
+
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('admin')
+  @Get('users')
+  getUsers() {
+    return this.authService.getUsers();
+  }
+
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('admin')
+  @Delete('users/:id')
+  deleteUser(@Param('id') id: string) {
+    return this.authService.deleteUser(id);
+  }
+
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('admin')
+  @Patch('users/:id/role')
+  updateUserRole(@Param('id') id: string, @Body() dto: UpdateRoleDto) {
+    return this.authService.updateUserRole(id, dto.role);
   }
 }
