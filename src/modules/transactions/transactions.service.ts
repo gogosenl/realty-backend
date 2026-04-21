@@ -128,6 +128,11 @@ async update(id: string, dto: UpdateTransactionDto): Promise<TransactionDocument
 
   return transaction.save();
 }
+async remove(id: string): Promise<void> {
+  const result = await this.transactionModel.findByIdAndDelete(id).exec();
+  if (!result) throw new NotFoundException(`Transaction ${id} not found`);
+}
+
 async getFinancialSummary(): Promise<any> {
   const completed = await this.transactionModel
     .find({ stage: TransactionStage.COMPLETED })
