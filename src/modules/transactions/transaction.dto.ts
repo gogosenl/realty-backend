@@ -3,26 +3,34 @@ import { TransactionStage } from './transaction.schema';
 
 export class CreateTransactionDto {
   @IsNotEmpty()
-    @IsString()
-    propertyAddress!: string;
+  @IsString()
+  propertyAddress!: string;
 
   @IsNotEmpty()
-    @IsNumber()
-    @Min(0)
-    salePrice!: number;
+  @IsNumber()
+  @Min(0)
+  salePrice!: number;
 
   @IsNotEmpty()
-    @IsNumber()
-    @Min(0)
-    totalServiceFee!: number;
+  @IsNumber()
+  @Min(0)
+  totalServiceFee!: number;
 
   @IsNotEmpty()
-    @IsMongoId()
-    listingAgent!: string;
+  @IsMongoId()
+  listingAgent!: string;
 
   @IsNotEmpty()
-    @IsMongoId()
-    sellingAgent!: string;
+  @IsMongoId()
+  sellingAgent!: string;
+
+  @IsOptional()
+  @IsString()
+  city?: string;
+
+  @IsOptional()
+  @IsString()
+  district?: string;
 
   @IsOptional()
   @IsString()
@@ -31,8 +39,8 @@ export class CreateTransactionDto {
 
 export class UpdateStageDto {
   @IsNotEmpty()
-    @IsEnum(TransactionStage)
-    stage!: TransactionStage;
+  @IsEnum(TransactionStage)
+  stage!: TransactionStage;
 }
 
 export class UpdateTransactionDto {
@@ -57,6 +65,14 @@ export class UpdateTransactionDto {
   @IsOptional()
   @IsMongoId()
   sellingAgent?: string;
+
+  @IsOptional()
+  @IsString()
+  city?: string;
+
+  @IsOptional()
+  @IsString()
+  district?: string;
 
   @IsOptional()
   @IsString()

@@ -1,7 +1,21 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Request, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Request,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { TransactionsService } from './transactions.service';
-import { CreateTransactionDto, UpdateStageDto, UpdateTransactionDto } from './transaction.dto';
+import {
+  CreateTransactionDto,
+  UpdateStageDto,
+  UpdateTransactionDto,
+} from './transaction.dto';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('transactions')
@@ -23,10 +37,10 @@ export class TransactionsController {
     return this.transactionsService.create(dto);
   }
 
- @Get()
-findAll(@Request() req: any) {
-  return this.transactionsService.findAll(req.user.id, req.user.role);
-}
+  @Get()
+  findAll(@Request() req: any) {
+    return this.transactionsService.findAll(req.user.email, req.user.role);
+  }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
@@ -39,12 +53,12 @@ findAll(@Request() req: any) {
   }
 
   @Patch(':id')
-update(@Param('id') id: string, @Body() dto: UpdateTransactionDto) {
-  return this.transactionsService.update(id, dto);
-}
+  update(@Param('id') id: string, @Body() dto: UpdateTransactionDto) {
+    return this.transactionsService.update(id, dto);
+  }
 
-@Delete(':id')
-remove(@Param('id') id: string) {
-  return this.transactionsService.remove(id);
-}
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.transactionsService.remove(id);
+  }
 }

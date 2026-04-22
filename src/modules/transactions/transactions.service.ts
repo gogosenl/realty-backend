@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Transaction, TransactionDocument, TransactionStage } from './transaction.schema';
 import { CreateTransactionDto, UpdateStageDto, UpdateTransactionDto } from './transaction.dto';
+import { Agent, AgentDocument } from '../agents/agent.schema';
 const STAGE_ORDER = [
   TransactionStage.AGREEMENT,
   TransactionStage.EARNEST_MONEY,
@@ -16,6 +17,8 @@ export class TransactionsService {
   constructor(
     @InjectModel(Transaction.name)
     private transactionModel: Model<TransactionDocument>,
+       @InjectModel(Agent.name)
+    private agentModel: Model<AgentDocument>,
   ) {}
 
   async create(dto: CreateTransactionDto): Promise<TransactionDocument> {
@@ -23,19 +26,22 @@ export class TransactionsService {
     return transaction.save();
   }
 
- async findAll(userId?: string, userRole?: string): Promise<TransactionDocument[]> {
-  const query = this.transactionModel
+async findAll(userEmail?: string, userRole?: string): Promise<TransactionDocument[]> {
+  const results = await this.transactionModel
     .find()
     .populate('listingAgent', 'name email')
-    .populate('sellingAgent', 'name email');
+    .populate('sellingAgent', 'name email')
+    .exec();
 
-  const results = await query.exec();
+  if (userRole === 'agent' && userEmail) {
+    const agent = await this.agentModel.findOne({ email: userEmail }).exec();
+    if (!agent) return [];
 
-  if (userRole === 'agent' && userId) {
+    const agentId = agent._id.toString();
     return results.filter((txn) => {
       const listing = (txn.listingAgent as any)?._id?.toString();
       const selling = (txn.sellingAgent as any)?._id?.toString();
-      return listing === userId || selling === userId;
+      return listing === agentId || selling === agentId;
     });
   }
 

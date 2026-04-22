@@ -23,6 +23,12 @@ export class Transaction {
   propertyAddress!: string;
 
   @Prop({ required: true })
+  city!: string;
+
+  @Prop({ required: false })
+  district!: string;
+
+  @Prop({ required: true })
   salePrice!: number;
 
   @Prop({ required: true })

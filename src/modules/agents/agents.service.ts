@@ -24,4 +24,8 @@ export class AgentsService {
     if (!agent) throw new NotFoundException(`Agent ${id} not found`);
     return agent;
   }
+
+  async findByEmail(email: string): Promise<AgentDocument | null> {
+  return this.agentModel.findOne({ email }).exec();
+  }
 }
