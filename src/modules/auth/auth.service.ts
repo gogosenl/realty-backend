@@ -6,32 +6,48 @@ import * as bcrypt from 'bcryptjs';
 import { User, UserDocument, UserRole } from './user.schema';
 import { RegisterDto, LoginDto, InviteDto } from './auth.dto';
 import { Invite, InviteDocument } from './invite.schema';
+import { Agent, AgentDocument } from '../agents/agent.schema';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     @InjectModel(Invite.name) private inviteModel: Model<InviteDocument>,
+    @InjectModel(Agent.name) private agentModel: Model<AgentDocument>,
     private jwtService: JwtService,
   ) {}
 
-  async register(dto: RegisterDto) {
-    const existing = await this.userModel.findOne({ email: dto.email });
-    if (existing) throw new ConflictException('Bu e-posta zaten kayıtlı');
+async register(dto: RegisterDto) {
+  const existing = await this.userModel.findOne({ email: dto.email });
+  if (existing) throw new ConflictException('Bu e-posta zaten kayıtlı');
 
-    if (dto.role === UserRole.AGENT) {
-      const invite = await this.inviteModel.findOne({ email: dto.email, used: false });
-      if (!invite) throw new ForbiddenException('Bu e-posta ile kayıt olmak için admin daveti gerekli');
-      invite.used = true;
-      await invite.save();
-    }
-
-    const hashed = await bcrypt.hash(dto.password, 10);
-    const user = new this.userModel({ ...dto, password: hashed });
-    await user.save();
-
-    return this.signToken(user);
+  if (dto.role === UserRole.AGENT) {
+    const invite = await this.inviteModel.findOne({ email: dto.email, used: false });
+    if (!invite) throw new ForbiddenException('Bu e-posta ile kayıt olmak için admin daveti gerekli');
+    invite.used = true;
+    await invite.save();
   }
+
+  const hashed = await bcrypt.hash(dto.password, 10);
+  const user = new this.userModel({ ...dto, password: hashed });
+  await user.save();
+
+  if (dto.role === UserRole.AGENT) {
+    try {
+      const agent = new this.agentModel({
+        name: dto.name,
+        email: dto.email,
+        phone: dto.phone || '0',
+      });
+      await agent.save();
+      console.log('Agent created:', agent._id);
+    } catch (e) {
+      console.error('Agent creation failed:', e.message);
+    }
+  }
+
+  return this.signToken(user);
+}
 
   async login(dto: LoginDto) {
     const user = await this.userModel.findOne({ email: dto.email });
@@ -74,8 +90,14 @@ export class AuthService {
 }
 
 async deleteUser(id: string) {
-  const user = await this.userModel.findByIdAndDelete(id);
+  const user = await this.userModel.findById(id);
   if (!user) throw new NotFoundException('Kullanıcı bulunamadı');
+  
+  if (user.role === UserRole.AGENT) {
+    await this.agentModel.findOneAndDelete({ email: user.email });
+  }
+  
+  await this.userModel.findByIdAndDelete(id);
   return { message: 'Kullanıcı silindi' };
 }
 

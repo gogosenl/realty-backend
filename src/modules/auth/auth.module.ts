@@ -7,12 +7,15 @@ import { Invite, InviteSchema } from './invite.schema';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './jwt.strategy';
+import { Agent } from 'http';
+import { AgentSchema } from '../agents/agent.schema';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: User.name, schema: UserSchema },
       { name: Invite.name, schema: InviteSchema },
+      { name: Agent.name, schema: AgentSchema },
     ]),
     PassportModule,
     JwtModule.register({

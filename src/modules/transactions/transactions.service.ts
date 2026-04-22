@@ -90,7 +90,7 @@ export class TransactionsService {
       sellingAgentAmount: isSameAgent ? 0 : agentPool * 0.5,
     };
   }
-  async getAgentEarnings(): Promise<any[]> {
+async getAgentEarnings(): Promise<any[]> {
   const completed = await this.transactionModel
     .find({ stage: TransactionStage.COMPLETED })
     .populate('listingAgent', 'name email')
@@ -103,17 +103,25 @@ export class TransactionsService {
     const breakdown = txn.commissionBreakdown;
     if (!breakdown) continue;
 
-    const listingId = (txn.listingAgent as any)._id.toString();
-    const sellingId = (txn.sellingAgent as any)._id.toString();
+    const listingAgent = txn.listingAgent as any;
+    const sellingAgent = txn.sellingAgent as any;
+
+    if (!listingAgent || !listingAgent._id) continue;
+
+    const listingId = listingAgent._id.toString();
 
     if (!earningsMap.has(listingId)) {
-      earningsMap.set(listingId, { agent: txn.listingAgent, total: 0 });
+      earningsMap.set(listingId, { agent: listingAgent, total: 0 });
     }
     earningsMap.get(listingId)!.total += breakdown.listingAgentAmount;
 
+    if (!sellingAgent || !sellingAgent._id) continue;
+
+    const sellingId = sellingAgent._id.toString();
+
     if (listingId !== sellingId) {
       if (!earningsMap.has(sellingId)) {
-        earningsMap.set(sellingId, { agent: txn.sellingAgent, total: 0 });
+        earningsMap.set(sellingId, { agent: sellingAgent, total: 0 });
       }
       earningsMap.get(sellingId)!.total += breakdown.sellingAgentAmount;
     }

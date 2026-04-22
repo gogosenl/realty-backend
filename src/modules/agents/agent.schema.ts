@@ -11,8 +11,8 @@ export class Agent {
   @Prop({ required: true, unique: true })
   email!: string;
 
-  @Prop({ required: true })
-  phone!: string;
+  @Prop({ required: false, default: '' })
+  phone: string;
 }
 
 export const AgentSchema = SchemaFactory.createForClass(Agent);

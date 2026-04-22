@@ -2,6 +2,7 @@ import { IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString, MinLength } from 'cl
 import { UserRole } from './user.schema';
 
 export class RegisterDto {
+  [x: string]: string;
   @IsNotEmpty()
   @IsString()
   name!: string;
@@ -16,8 +17,13 @@ export class RegisterDto {
   password!: string;
 
   @IsOptional()
+  @IsString()
+  phone!: string;
+
+
+  @IsOptional()
   @IsEnum(UserRole)
-  role?: UserRole;
+  role!: UserRole;
 }
 
 export class LoginDto {
