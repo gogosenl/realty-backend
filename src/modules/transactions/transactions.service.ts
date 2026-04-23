@@ -1,8 +1,20 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Transaction, TransactionDocument, TransactionStage } from './transaction.schema';
-import { CreateTransactionDto, UpdateStageDto, UpdateTransactionDto } from './transaction.dto';
+import {
+  Transaction,
+  TransactionDocument,
+  TransactionStage,
+} from './transaction.schema';
+import {
+  CreateTransactionDto,
+  UpdateStageDto,
+  UpdateTransactionDto,
+} from './transaction.dto';
 import { Agent, AgentDocument } from '../agents/agent.schema';
 const STAGE_ORDER = [
   TransactionStage.AGREEMENT,
@@ -17,48 +29,63 @@ export class TransactionsService {
   constructor(
     @InjectModel(Transaction.name)
     private transactionModel: Model<TransactionDocument>,
-       @InjectModel(Agent.name)
+    @InjectModel(Agent.name)
     private agentModel: Model<AgentDocument>,
   ) {}
 
-  async create(dto: CreateTransactionDto): Promise<TransactionDocument> {
-    const transaction = new this.transactionModel(dto);
+  async create(
+    dto: CreateTransactionDto,
+    userId?: string,
+  ): Promise<TransactionDocument> {
+    const transaction = new this.transactionModel({
+      ...dto,
+      createdBy: userId,
+    });
     return transaction.save();
   }
 
-async findAll(userEmail?: string, userRole?: string): Promise<TransactionDocument[]> {
-  const results = await this.transactionModel
-    .find()
-    .populate('listingAgent', 'name email')
-    .populate('sellingAgent', 'name email')
-    .exec();
+  async findAll(
+    userEmail?: string,
+    userRole?: string,
+  ): Promise<TransactionDocument[]> {
+    const results = await this.transactionModel
+      .find()
+      .populate('listingAgent', 'name email')
+      .populate('sellingAgent', 'name email')
+      .populate('createdBy', 'name email')
+      .exec();
 
-  if (userRole === 'agent' && userEmail) {
-    const agent = await this.agentModel.findOne({ email: userEmail }).exec();
-    if (!agent) return [];
+    if (userRole === 'agent' && userEmail) {
+      const agent = await this.agentModel.findOne({ email: userEmail }).exec();
+      if (!agent) return [];
 
-    const agentId = agent._id.toString();
-    return results.filter((txn) => {
-      const listing = (txn.listingAgent as any)?._id?.toString();
-      const selling = (txn.sellingAgent as any)?._id?.toString();
-      return listing === agentId || selling === agentId;
-    });
+      const agentId = agent._id.toString();
+      return results.filter((txn) => {
+        const listing = (txn.listingAgent as any)?._id?.toString();
+        const selling = (txn.sellingAgent as any)?._id?.toString();
+        return listing === agentId || selling === agentId;
+      });
+    }
+
+    return results;
   }
-
-  return results;
-}
 
   async findOne(id: string): Promise<TransactionDocument> {
     const transaction = await this.transactionModel
       .findById(id)
       .populate('listingAgent', 'name email')
       .populate('sellingAgent', 'name email')
+      .populate('createdBy', 'name email')
       .exec();
-    if (!transaction) throw new NotFoundException(`Transaction ${id} not found`);
+    if (!transaction)
+      throw new NotFoundException(`Transaction ${id} not found`);
     return transaction;
   }
 
-  async updateStage(id: string, dto: UpdateStageDto): Promise<TransactionDocument> {
+  async updateStage(
+    id: string,
+    dto: UpdateStageDto,
+  ): Promise<TransactionDocument> {
     const transaction = await this.findOne(id);
 
     const currentIndex = STAGE_ORDER.indexOf(transaction.stage);
@@ -96,92 +123,96 @@ async findAll(userEmail?: string, userRole?: string): Promise<TransactionDocumen
       sellingAgentAmount: isSameAgent ? 0 : agentPool * 0.5,
     };
   }
-async getAgentEarnings(): Promise<any[]> {
-  const completed = await this.transactionModel
-    .find({ stage: TransactionStage.COMPLETED })
-    .populate('listingAgent', 'name email')
-    .populate('sellingAgent', 'name email')
-    .exec();
+  async getAgentEarnings(): Promise<any[]> {
+    const completed = await this.transactionModel
+      .find({ stage: TransactionStage.COMPLETED })
+      .populate('listingAgent', 'name email')
+      .populate('sellingAgent', 'name email')
+      .exec();
 
-  const earningsMap = new Map<string, { agent: any; total: number }>();
+    const earningsMap = new Map<string, { agent: any; total: number }>();
 
-  for (const txn of completed) {
-    const breakdown = txn.commissionBreakdown;
-    if (!breakdown) continue;
+    for (const txn of completed) {
+      const breakdown = txn.commissionBreakdown;
+      if (!breakdown) continue;
 
-    const listingAgent = txn.listingAgent as any;
-    const sellingAgent = txn.sellingAgent as any;
+      const listingAgent = txn.listingAgent as any;
+      const sellingAgent = txn.sellingAgent as any;
 
-    if (!listingAgent || !listingAgent._id) continue;
+      if (!listingAgent || !listingAgent._id) continue;
 
-    const listingId = listingAgent._id.toString();
+      const listingId = listingAgent._id.toString();
 
-    if (!earningsMap.has(listingId)) {
-      earningsMap.set(listingId, { agent: listingAgent, total: 0 });
-    }
-    earningsMap.get(listingId)!.total += breakdown.listingAgentAmount;
-
-    if (!sellingAgent || !sellingAgent._id) continue;
-
-    const sellingId = sellingAgent._id.toString();
-
-    if (listingId !== sellingId) {
-      if (!earningsMap.has(sellingId)) {
-        earningsMap.set(sellingId, { agent: sellingAgent, total: 0 });
+      if (!earningsMap.has(listingId)) {
+        earningsMap.set(listingId, { agent: listingAgent, total: 0 });
       }
-      earningsMap.get(sellingId)!.total += breakdown.sellingAgentAmount;
+      earningsMap.get(listingId)!.total += breakdown.listingAgentAmount;
+
+      if (!sellingAgent || !sellingAgent._id) continue;
+
+      const sellingId = sellingAgent._id.toString();
+
+      if (listingId !== sellingId) {
+        if (!earningsMap.has(sellingId)) {
+          earningsMap.set(sellingId, { agent: sellingAgent, total: 0 });
+        }
+        earningsMap.get(sellingId)!.total += breakdown.sellingAgentAmount;
+      }
     }
+
+    return Array.from(earningsMap.values());
+  }
+  async update(
+    id: string,
+    dto: UpdateTransactionDto,
+  ): Promise<TransactionDocument> {
+    const transaction = await this.transactionModel.findById(id).exec();
+
+    if (!transaction)
+      throw new NotFoundException(`Transaction ${id} not found`);
+
+    if (transaction.stage === TransactionStage.COMPLETED) {
+      throw new BadRequestException('Tamamlanmış işlem düzenlenemez');
+    }
+
+    if (dto.propertyAddress) transaction.propertyAddress = dto.propertyAddress;
+    if (dto.salePrice) transaction.salePrice = dto.salePrice;
+    if (dto.totalServiceFee) transaction.totalServiceFee = dto.totalServiceFee;
+    if (dto.notes !== undefined) transaction.notes = dto.notes;
+
+    return transaction.save();
+  }
+  async remove(id: string): Promise<void> {
+    const result = await this.transactionModel.findByIdAndDelete(id).exec();
+    if (!result) throw new NotFoundException(`Transaction ${id} not found`);
   }
 
-  return Array.from(earningsMap.values());
-}
-async update(id: string, dto: UpdateTransactionDto): Promise<TransactionDocument> {
-  const transaction = await this.transactionModel
-    .findById(id)
-    .exec();
-    
-  if (!transaction) throw new NotFoundException(`Transaction ${id} not found`);
+  async getFinancialSummary(): Promise<any> {
+    const completed = await this.transactionModel
+      .find({ stage: TransactionStage.COMPLETED })
+      .exec();
 
-  if (transaction.stage === TransactionStage.COMPLETED) {
-    throw new BadRequestException('Tamamlanmış işlem düzenlenemez');
+    const totalRevenue = completed.reduce(
+      (sum, txn) => sum + (txn.commissionBreakdown?.totalServiceFee ?? 0),
+      0,
+    );
+    const agencyRevenue = completed.reduce(
+      (sum, txn) => sum + (txn.commissionBreakdown?.agencyAmount ?? 0),
+      0,
+    );
+    const agentRevenue = completed.reduce(
+      (sum, txn) =>
+        sum +
+        (txn.commissionBreakdown?.listingAgentAmount ?? 0) +
+        (txn.commissionBreakdown?.sellingAgentAmount ?? 0),
+      0,
+    );
+
+    return {
+      completedCount: completed.length,
+      totalRevenue,
+      agencyRevenue,
+      agentRevenue,
+    };
   }
-
-  if (dto.propertyAddress) transaction.propertyAddress = dto.propertyAddress;
-  if (dto.salePrice) transaction.salePrice = dto.salePrice;
-  if (dto.totalServiceFee) transaction.totalServiceFee = dto.totalServiceFee;
-  if (dto.notes !== undefined) transaction.notes = dto.notes;
-
-  return transaction.save();
-}
-async remove(id: string): Promise<void> {
-  const result = await this.transactionModel.findByIdAndDelete(id).exec();
-  if (!result) throw new NotFoundException(`Transaction ${id} not found`);
-}
-
-async getFinancialSummary(): Promise<any> {
-  const completed = await this.transactionModel
-    .find({ stage: TransactionStage.COMPLETED })
-    .exec();
-
-  const totalRevenue = completed.reduce(
-    (sum, txn) => sum + (txn.commissionBreakdown?.totalServiceFee ?? 0), 0
-  );
-  const agencyRevenue = completed.reduce(
-    (sum, txn) => sum + (txn.commissionBreakdown?.agencyAmount ?? 0), 0
-  );
-  const agentRevenue = completed.reduce(
-    (sum, txn) =>
-      sum +
-      (txn.commissionBreakdown?.listingAgentAmount ?? 0) +
-      (txn.commissionBreakdown?.sellingAgentAmount ?? 0),
-    0,
-  );
-
-  return {
-    completedCount: completed.length,
-    totalRevenue,
-    agencyRevenue,
-    agentRevenue,
-  };
-}
 }

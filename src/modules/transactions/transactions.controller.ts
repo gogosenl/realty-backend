@@ -33,9 +33,9 @@ export class TransactionsController {
   }
 
   @Post()
-  create(@Body() dto: CreateTransactionDto) {
-    return this.transactionsService.create(dto);
-  }
+create(@Body() dto: CreateTransactionDto, @Request() req: any) {
+  return this.transactionsService.create(dto, req.user.id);
+}
 
   @Get()
   findAll(@Request() req: any) {

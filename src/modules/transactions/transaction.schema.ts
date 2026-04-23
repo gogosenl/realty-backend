@@ -52,6 +52,9 @@ export class Transaction {
 
   @Prop()
   notes!: string;
+  
+  @Prop({ type: Types.ObjectId, ref: 'User' })
+  createdBy!: Types.ObjectId;
 }
 
 export const TransactionSchema = SchemaFactory.createForClass(Transaction);
