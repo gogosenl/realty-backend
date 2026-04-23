@@ -1,8 +1,7 @@
-import { IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString, Matches, MinLength } from 'class-validator';
 import { UserRole } from './user.schema';
 
 export class RegisterDto {
-  [x: string]: string;
   @IsNotEmpty()
   @IsString()
   name!: string;
@@ -18,12 +17,12 @@ export class RegisterDto {
 
   @IsOptional()
   @IsString()
-  phone!: string;
-
+  @Matches(/^05\d{9}$/, { message: 'Lütfen Geçerli Bir Telefon Numarası Giriniz' })
+  phone?: string;
 
   @IsOptional()
   @IsEnum(UserRole)
-  role!: UserRole;
+  role?: UserRole;
 }
 
 export class LoginDto {

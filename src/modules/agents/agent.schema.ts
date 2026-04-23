@@ -11,8 +11,15 @@ export class Agent {
   @Prop({ required: true, unique: true })
   email!: string;
 
-  @Prop({ required: false, default: '' })
-  phone: string;
+  @Prop({
+    required: false,
+    default: '',
+    validate: {
+      validator: (v: string) => !v || /^05\d{9}$/.test(v),
+      message: 'Telefon numarası 05 ile başlamalı ve 11 haneli olmalıdır'
+    }
+  })
+  phone!: string;
 }
 
 export const AgentSchema = SchemaFactory.createForClass(Agent);
