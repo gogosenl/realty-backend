@@ -3,6 +3,20 @@ import { Document, Types } from 'mongoose';
 
 export type TransactionDocument = Transaction & Document;
 
+export enum TransactionType {
+  SALE = 'sale',
+  RENT = 'rent',
+}
+
+export enum PropertyType {
+  HOUSE = 'house',
+  LAND = 'land',
+  SHOP = 'shop',
+  APARTMENT = 'apartment',
+  OFFICE = 'office',
+  OTHER = 'other',
+}
+
 export enum TransactionStage {
   AGREEMENT = 'agreement',
   EARNEST_MONEY = 'earnest_money',
@@ -52,9 +66,24 @@ export class Transaction {
 
   @Prop()
   notes!: string;
-  
+
   @Prop({ type: Types.ObjectId, ref: 'User' })
   createdBy!: Types.ObjectId;
+
+ @Prop({
+  type: String,
+  enum: TransactionType,
+  required: false,
+  default: TransactionType.SALE,
+})
+transactionType: TransactionType;
+
+  @Prop({
+    type: String,
+    enum: PropertyType,
+    required: false,
+  })
+  propertyType?: PropertyType;
 }
 
 export const TransactionSchema = SchemaFactory.createForClass(Transaction);

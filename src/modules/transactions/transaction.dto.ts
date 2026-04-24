@@ -7,7 +7,11 @@ import {
   IsString,
   Min,
 } from 'class-validator';
-import { TransactionStage } from './transaction.schema';
+import {
+  TransactionStage,
+  TransactionType,
+  PropertyType,
+} from './transaction.schema';
 
 export class CreateTransactionDto {
   @IsNotEmpty()
@@ -47,6 +51,14 @@ export class CreateTransactionDto {
   @IsOptional()
   @IsMongoId()
   createdBy?: string;
+
+  @IsOptional()
+  @IsEnum(TransactionType)
+  transactionType?: TransactionType;
+
+  @IsOptional()
+  @IsEnum(PropertyType)
+  propertyType?: PropertyType;
 }
 
 export class UpdateStageDto {
@@ -89,4 +101,12 @@ export class UpdateTransactionDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  @IsOptional()
+  @IsEnum(TransactionType)
+  transactionType?: TransactionType;
+
+  @IsOptional()
+  @IsEnum(PropertyType)
+  propertyType?: PropertyType;
 }
