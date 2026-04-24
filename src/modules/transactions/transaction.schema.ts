@@ -76,7 +76,7 @@ export class Transaction {
   required: false,
   default: TransactionType.SALE,
 })
-transactionType: TransactionType;
+transactionType!: TransactionType;
 
   @Prop({
     type: String,
